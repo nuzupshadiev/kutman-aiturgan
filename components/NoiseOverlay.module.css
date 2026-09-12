@@ -1,0 +1,21 @@
+.noise {
+  position: fixed;
+  display: flex;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: var(--app-height, 100%);
+  background-image: url("/assets/3830-313-Mask_groups.jpg");
+  background-size: 170px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.visible {
+  opacity: 0.1;
+  mix-blend-mode: soft-light;
+}

@@ -1,0 +1,26 @@
+/*
+ * Scroll reveal — elements slide up 100px and fade in the first time they
+ * enter the viewport (250 ms after the intersection fires).
+ */
+
+.t-animate {
+  opacity: 0;
+  transform: translateY(100px);
+  backface-visibility: hidden;
+  transition-property: opacity, transform;
+  transition-duration: 1s;
+  transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.t-animate_started {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-animate {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

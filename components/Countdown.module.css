@@ -1,0 +1,41 @@
+.timer {
+  text-align: center;
+  min-width: 212px;
+  color: #e0c58e;
+}
+
+.timer > span {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.element {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.value {
+  display: block;
+  font-family: var(--font-marmelad), "Marmelad", Georgia, serif;
+  font-size: 35px;
+  line-height: 1;
+  color: #e0c58e;
+}
+
+.label {
+  display: block;
+  font-family: var(--font-comfortaa), "Comfortaa", Arial, sans-serif;
+  font-size: 10px;
+  line-height: 1;
+  color: #e0c58e;
+}
+
+.separator {
+  display: inline-block;
+  vertical-align: top;
+  padding: 0 7px;
+  font-family: var(--font-marmelad), "Marmelad", Georgia, serif;
+  font-size: 35px;
+  line-height: 1;
+  color: #e0c58e;
+}

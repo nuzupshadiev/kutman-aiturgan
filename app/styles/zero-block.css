@@ -1,0 +1,175 @@
+/*
+ * Zero-block layout engine.
+ *
+ * Every screen of the invitation is an "artboard": a fixed-width canvas (1200 /
+ * 960 / 640 / 480 / 320 px depending on the breakpoint) on which elements are
+ * absolutely positioned. The artboard is then scaled to the viewport with
+ * `zoom: var(--zoom)`, where `--zoom = windowWidth / artboardWidth`, so the
+ * design keeps its exact proportions at every screen size.
+ *
+ * Because the artboard is exactly one artboard wide, `calc(50% - 600px + X)`
+ * inside a zoomed board resolves to the artboard's own coordinate system,
+ * which is how every element's `left` is expressed.
+ */
+
+.zb {
+  position: relative;
+  -webkit-text-size-adjust: 100%;
+}
+
+.zb-board {
+  position: relative;
+  /* One artboard wide (the value is a device-pixel width, so it is divided by
+     the zoom), which keeps `50%` on the artboard's own centre line even when a
+     classic scrollbar narrows the visible area. */
+  width: calc(var(--artboard-width, 100%) / var(--zoom, 1));
+  overflow: hidden;
+  zoom: var(--zoom, 1);
+}
+
+.zb-bg,
+.zb-filter {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.zb-bg {
+  z-index: 0;
+}
+
+.zb-filter {
+  z-index: 1;
+}
+
+.zb-el {
+  position: absolute;
+  box-sizing: border-box;
+  display: table;
+}
+
+.zb-group,
+.zb-mol {
+  box-sizing: border-box;
+}
+
+.zb .zb-atom {
+  display: table-cell;
+  vertical-align: middle;
+  width: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+.zb .zb-atom ul,
+.zb .zb-atom ol {
+  margin-bottom: 0;
+}
+
+.zb a.zb-atom {
+  text-decoration: none;
+}
+
+.zb .zb-atom__img {
+  width: 100%;
+  /* The intrinsic width/height attributes only reserve the aspect ratio. */
+  height: auto;
+  display: block;
+}
+
+.zb .zb-atom__html {
+  vertical-align: top;
+}
+
+.zb-board .zb-el[data-kind="text"] .zb-atom {
+  word-break: normal;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Elements that take part in a flow ("molecule") instead of being pinned. */
+.zb-el_flow {
+  position: relative !important;
+  left: initial !important;
+  top: initial !important;
+  height: fit-content;
+  flex-shrink: 0;
+}
+
+/* ---------- buttons ---------- */
+
+.zb .zb-el[data-kind="button"] {
+  display: block;
+}
+
+.zb .zb-el[data-kind="button"] .zb-atom {
+  display: flex;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.zb .zb-atom__button-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.zb .zb-atom__button-text {
+  flex: 1 1 0;
+  text-overflow: ellipsis;
+}
+
+.zb .zb-atom__button-border {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  transition-duration: inherit;
+  transition-timing-function: inherit;
+  pointer-events: none;
+}
+
+/* ---------- tooltip pin ---------- */
+
+.zb .zb-atom__pin {
+  border-radius: 1000px;
+  border-style: solid;
+  cursor: pointer;
+}
+
+.zb .zb-atom__tip {
+  position: absolute;
+  box-sizing: border-box;
+  width: 300px;
+  max-width: 90vw;
+  padding: 15px;
+  display: none;
+  z-index: 20;
+}
+
+.zb .zb-atom__pin_opened .zb-atom__tip {
+  display: block;
+}
+
+.zb .zb-atom__tip[data-tip-pos="top"] {
+  bottom: 100%;
+  margin-bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.zb .zb-atom__tip[data-tip-pos="bottom"] {
+  top: 100%;
+  margin-top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+}

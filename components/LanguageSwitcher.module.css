@@ -1,0 +1,47 @@
+.root {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid rgba(224, 197, 142, 0.55);
+  border-radius: 999px;
+  background: rgba(255, 253, 246, 0.88);
+  box-shadow: 0 4px 18px -6px rgba(17, 34, 80, 0.45);
+  backdrop-filter: blur(6px);
+}
+
+.option {
+  appearance: none;
+  padding: 5px 11px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #112250;
+  font-family: var(--t-text-font, Arial), sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.option:hover {
+  color: #2a4888;
+}
+
+.option_active,
+.option_active:hover {
+  background: #112250;
+  color: #fffdf6;
+}
+
+.option:focus-visible {
+  outline: 2px solid #e0c58e;
+  outline-offset: 2px;
+}

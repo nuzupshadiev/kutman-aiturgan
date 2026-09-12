@@ -1,26 +1,123 @@
-@import "tailwindcss";
+@import "./styles/zero-block.css";
+@import "./styles/reveal.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Both set from JS on first paint; see components/ZoomController.tsx. */
+  --zoom: 1;
+  --artboard-width: 100%;
+
+  /* The generated artboard styles reference these by name; the faces behind
+     them are declared in app/layout.tsx. */
+  --t-text-font: var(--font-primer), Georgia, serif;
+  --t-headline-font: var(--font-primer), Georgia, serif;
+
+  /* The calligraphic display face (see app/layout.tsx), used for the lettered
+     lines that the source design shipped as flattened artwork. */
+  --t-script-font: var(--font-script), "Brush Script MT", cursive;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+*,
+*::before,
+*::after {
+  box-sizing: content-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #fffdf6;
+  font-family: var(--t-text-font);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+body.is-locked {
+  overflow: hidden;
+}
+
+div,
+span,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+code,
+img,
+b,
+u,
+i,
+table,
+tr,
+th,
+td,
+video,
+figure,
+fieldset,
+legend {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+img:not([src]) {
+  visibility: hidden;
+}
+
+.section {
+  position: relative;
+}
+
+/* ---------- display lines that fit their box ---------- */
+
+/*
+ * The artboard measured every calligraphic line around the one short word the
+ * sample data happened to use, and left it `width: auto; white-space: nowrap`
+ * — so a longer line from the invitation simply grows past the board.
+ *
+ * `zb-el_fit` gives such an element the width it was allotted instead, and
+ * components/FitLine.tsx shrinks the line onto it. The engine already uses
+ * `!important` to take `zb-el_flow` elements out of the artboard's absolute
+ * geometry; this is the same kind of override, over the same rules.
+ */
+.zb-el_fit,
+.zb-el_fit .zb-atom {
+  display: block !important;
+  width: 100% !important;
+}
+
+/* Every line this is used on is centred, so the box starts where its own
+   container does rather than at the offset the sample word needed. */
+.zb-el_fit {
+  left: 0 !important;
+}
+
+/*
+ * The calligraphic face the artboard maps to weight 800 has no Ң, Ө or Ү, so a
+ * Kyrgyz line set in it drops to a sans-serif mid-word. Every such line is set
+ * in the script the couple's names use instead, which covers all three.
+ */
+.zb-el_script .zb-atom {
+  font-family: var(--t-script-font) !important;
+  font-weight: 400 !important;
+}
+
+.fit-line {
+  display: block;
+}
+
+.fit-line__inner {
+  display: inline-block;
+  white-space: nowrap;
+  /* Room for the swashes, which reach past the widths the fitter measures. */
+  padding: 0 0.3em;
 }
