@@ -1,8 +1,7 @@
 /**
- * Customer data. The Invitation Admin rewrites this object through the
- * TypeScript AST when it generates a real invitation, so every value here is a
- * plain string literal — nothing computed, nothing imported into a value, no
- * template strings, no spreads.
+ * Customer data. Every value here is a plain string literal — nothing
+ * computed, nothing imported into a value, no template strings, no spreads —
+ * so the whole invitation can be re-targeted by editing this one object.
  *
  * Design copy, section headings and decorative wording belong in
  * `data/template-content.ts`, never here.
@@ -10,24 +9,20 @@
 import type { InvitationData } from "@/types/invitation";
 
 export const invitation = {
-  slug: "blue-letter-wedding",
+  slug: "kutman-aiturgan",
   type: "wedding",
   defaultLanguage: "ky",
-  // The sample names are chosen so that neither of them occurs inside an
-  // ordinary word anywhere else on the page: verification scans the built
-  // invitation for them, and a name that is also a common word would be found
-  // in a sentence that has nothing to do with it.
   people: {
     bride: {
       name: {
-        ru: "Айчүрөк",
-        ky: "Айчүрөк",
+        ru: "Айтурган",
+        ky: "Айтурган",
       },
     },
     groom: {
       name: {
-        ru: "Мырзабек",
-        ky: "Мырзабек",
+        ru: "Кутман",
+        ky: "Кутман",
       },
     },
   },
@@ -36,19 +31,19 @@ export const invitation = {
   // hero prints the day, month and year down the card, and the countdown runs
   // to this instant.
   event: {
-    date: "2027-09-18",
+    date: "2026-10-03",
     startTime: "17:00",
   },
   venue: {
     name: {
-      ru: "Банкетный зал «Гранд Холл»",
-      ky: "«Гранд Холл» банкет залы",
+      ru: "Ресторан «Айкокул»",
+      ky: "«Айкокул» рестораны",
     },
     address: {
-      ru: "Бишкек, проспект Манаса, 40",
-      ky: "Бишкек, Манас проспекти, 40",
+      ru: "Ошская область, город Гульча",
+      ky: "Ош облусу, Гүлчө шаары",
     },
-    mapUrl: "https://maps.google.com/?q=Bishkek",
+    mapUrl: "https://2gis.kg/bishkek/firm/70000001113175304",
   },
   weddingDetails: {
     // The placeholders mark where the names belong. This design lifts them out
@@ -62,18 +57,14 @@ export const invitation = {
     // supplies, and again on the closing card under "С любовью," — so the
     // value itself names only who is hosting.
     hosts: {
-      ru: "Мырзабек & Айчүрөк",
-      ky: "Мырзабек & Айчүрөк",
+      ru: "Урмат & Гулсара",
+      ky: "Урмат & Гулсара",
     },
   },
   timeline: {
-    // Time and title only: the admin substitutes exactly those two values when
-    // an operator supplies their own schedule, so anything else written here
-    // would survive into a row it no longer describes.
-    //
-    // The ribbon this design draws the programme along has five drawn stops.
-    // Fewer items simply leave the later ones empty; a sixth has nowhere on
-    // the ribbon to stand and is not rendered.
+    // Time and title only. The ribbon this design draws the programme along
+    // has five drawn stops; fewer items simply leave the later ones empty, and
+    // a sixth has nowhere on the ribbon to stand and is not rendered.
     items: [
       {
         time: "16:00",
@@ -90,21 +81,21 @@ export const invitation = {
         },
       },
       {
-        time: "19:00",
+        time: "19:30",
         title: {
           ru: "Праздничная программа",
           ky: "Майрамдык программа",
         },
       },
       {
-        time: "22:00",
+        time: "21:30",
         title: {
           ru: "Праздничный торт",
           ky: "Той тортун кесүү",
         },
       },
       {
-        time: "23:00",
+        time: "22:30",
         title: {
           ru: "Завершение вечера",
           ky: "Кеченин аякташы",
@@ -116,33 +107,34 @@ export const invitation = {
     music: "/audio/jax-wedding.m4a",
   },
   metadata: {
-    // A generic occasion label with no names in it: the admin leaves it alone
-    // and reads it to compose the title, so the page keeps this template's own
-    // wording.
+    /** A generic occasion label with no names in it. */
     titleSuffix: {
       ru: "приглашение на свадьбу",
       ky: "үйлөнүү тоюна чакыруу",
     },
-    // Rewritten per customer, in the browser tab and in every shared link.
+    /** The browser tab title. */
     title: {
-      ru: "Мырзабек & Айчүрөк — приглашение на свадьбу",
-      ky: "Мырзабек & Айчүрөк — үйлөнүү тоюна чакыруу",
+      ru: "Кутман & Айтурган — приглашение на свадьбу",
+      ky: "Кутман & Айтурган — үйлөнүү тоюна чакыруу",
     },
     description: {
-      ru: "Свадебное приглашение: дата и время, программа вечера, адрес торжества и анкета гостя.",
-      ky: "Үйлөнүү тоюна чакыруу: датасы жана убактысы, кечтин программасы, той өтүүчү жердин дареги жана конок анкетасы.",
+      ru: "3 октября 2026 года в 17:00, ресторан «Айкокул», город Гульча. Сердечно приглашаем вас на нашу свадьбу!",
+      ky: "2026-жылдын 3-октябры, саат 17:00, Гүлчө шаары, «Айкокул» рестораны. Тойго чын жүрөктөн чакырабыз!",
     },
+    /** What WhatsApp, Telegram and other messengers show on a shared link. */
     openGraphTitle: {
-      ru: "Мырзабек & Айчүрөк — приглашение на свадьбу",
-      ky: "Мырзабек & Айчүрөк — үйлөнүү тоюна чакыруу",
+      ru: "Кутман & Айтурган — приглашение на свадьбу",
+      ky: "Кутман & Айтурган — үйлөнүү тоюна чакыруу",
     },
     openGraphDescription: {
-      ru: "Свадебное приглашение: дата и время, программа вечера, адрес торжества и анкета гостя.",
-      ky: "Үйлөнүү тоюна чакыруу: датасы жана убактысы, кечтин программасы, той өтүүчү жердин дареги жана конок анкетасы.",
+      ru: "03.10.2026 · 17:00 · Ошская область, город Гульча, ресторан «Айкокул»",
+      ky: "03.10.2026 · саат 17:00 · Ош облусу, Гүлчө шаары, «Айкокул» рестораны",
     },
-  },
-  rsvp: {
-    /** The Invitation Admin writes the absolute RSVP API URL here. */
-    endpoint: "",
+    /** 1200×630 JPEG in `public`, kept small enough for WhatsApp to show it. */
+    openGraphImage: "/assets/share-kutman-aiturgan.jpg",
+    openGraphImageAlt: {
+      ru: "Кутман & Айтурган, 03.10.2026",
+      ky: "Кутман & Айтурган, 03.10.2026",
+    },
   },
 } satisfies InvitationData;

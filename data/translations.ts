@@ -129,7 +129,7 @@ export const translations = {
         "декабрь",
       ],
     },
-    /** Nominative, for the calendar's own heading: "Сентябрь 2027". */
+    /** Nominative, for the calendar's own heading: "Октябрь 2026". */
     months: {
       ru: [
         "Январь",

@@ -1,7 +1,7 @@
-# Blue letter
+# Кутман & Айтурган
 
-A bilingual (Russian / Kyrgyz) wedding invitation template for the Invitation
-Admin system.
+A bilingual (Kyrgyz / Russian) wedding invitation for Кутман & Айтурган —
+3 October 2026, 17:00, «Айкокул», Gulcha — built on the Blue letter design.
 
 A sealed navy envelope with a gold wax seal opens onto a letter: the couple's
 names in copperplate on an ornate cartouche, the address to the guests, the day
@@ -29,30 +29,44 @@ npm run build        # production build
 npm run start        # serve the production build
 ```
 
-Copy `.env.example` to `.env.local` if you want the guest form to reach a real
-RSVP API while developing. Without it the form shows a localized configuration
-message instead of pretending to send anything.
+Copy `.env.example` to `.env.local` and fill in the Google credentials if you
+want the guest form to write to the sheet while developing. Without them the
+form shows a localized configuration message instead of pretending to send
+anything.
+
+---
+
+## Deploying to Vercel
+
+1. Import the repository into Vercel (framework preset: Next.js).
+2. In **Settings → Environment Variables** add `GOOGLE_CLIENT_EMAIL`,
+   `GOOGLE_PRIVATE_KEY` and `GOOGLE_SHEET_ID` (and optionally
+   `GOOGLE_SHEET_NAME`) for Production — see `.env.example` for where each one
+   comes from. Paste the private key without surrounding quotes.
+3. If the invitation is served from a custom domain, also set
+   `NEXT_PUBLIC_SITE_URL` to it, so link previews point at that domain.
+4. Deploy. Environment variables are read at build and request time, so
+   redeploy after changing any of them.
+
+The spreadsheet must be shared with the service account's e-mail as an
+**Editor**.
 
 ---
 
 ## The invitation data contract
 
 Every customer-specific value lives in **`data/invitation.ts`**, in a single
-exported object literal named exactly `invitation`. The Invitation Admin
-rewrites that object through the TypeScript AST when it generates a real
-invitation, so the file obeys a few rules:
+exported object literal named exactly `invitation`. The file obeys a few rules:
 
 - plain string literals only — nothing computed, no template strings, no
   spreads, no imports used as values;
 - every human-readable value is `{ ru, ky }`, never one language in both slots;
-- `type` is `"wedding"`, matching the entry in the admin's `data/templates.ts`;
-- `rsvp.endpoint` ships empty; the admin writes the absolute RSVP API URL into
-  it at generation time.
+- `type` is `"wedding"`.
 
-Required by the contract: `slug`, `type`, `people.bride.name`,
-`people.groom.name`, `event.date`, `event.startTime`, `venue.name`,
-`venue.address`, `venue.mapUrl`, `weddingDetails.customMessage`,
-`weddingDetails.hosts`, `rsvp.endpoint`.
+Required: `slug`, `type`, `people.bride.name`, `people.groom.name`,
+`event.date`, `event.startTime`, `venue.name`, `venue.address`,
+`venue.mapUrl`, `weddingDetails.customMessage`, `weddingDetails.hosts`, and
+the `metadata` block, including `openGraphImage`.
 
 `event.date` drives four places at once: the calendar opens on that month with
 that day inside the heart, the calligraphic line under it names the month, the
@@ -83,41 +97,50 @@ couple.
 
 **Design copy belongs in `data/template-content.ts`; reusable interface strings
 belong in `data/translations.ts`.** Never write a name, a date or a venue into
-either of them: the admin rewrites only `data/invitation.ts`, so anything else
-would ship to a real customer as somebody else's wedding.
+either of them: keeping every customer value in `data/invitation.ts` is what
+lets the invitation be re-targeted by editing one file.
 
 ---
 
 ## RSVP integration
 
-The guest form posts directly to the central RSVP API. It never talks to a
-database and this repository contains no `app/api/rsvp` route.
+The guest form posts to the site's own route handler, `app/api/rsvp/route.ts`,
+which appends each answer as a row to a Google Sheet.
 
-`lib/rsvp.ts` resolves the endpoint in this order:
+- The Google service-account credentials are read from server-only environment
+  variables (`GOOGLE_CLIENT_EMAIL`, `GOOGLE_PRIVATE_KEY`, `GOOGLE_SHEET_ID`,
+  optional `GOOGLE_SHEET_NAME`). None is `NEXT_PUBLIC_`, and
+  `lib/google-sheets.ts` imports `server-only`, so the key never reaches the
+  browser.
+- It talks to the Sheets REST API directly with a signed JWT — no Google SDK —
+  and reuses the access token while the function stays warm.
+- On an empty tab it writes the header row first.
+- Every field is validated again on the server; values are written `RAW`, so a
+  name beginning with `=` is never evaluated as a formula.
 
-1. `process.env.NEXT_PUBLIC_RSVP_API_URL` + `/api/rsvp`, when the deployment
-   sets it;
-2. the absolute URL the admin wrote into `invitation.rsvp.endpoint`.
-
-Neither available is treated as a visible, localized configuration error.
-
-The payload the server accepts:
+The payload the route accepts:
 
 ```jsonc
 {
-  "invitationSlug": "…",     // invitation.slug, ≤120 characters
   "guestName": "…",          // trimmed, non-empty, ≤120 characters
   "attendance": "yes",       // "yes" | "no"
   "guestCount": 2,           // 1–20 when attending, 0 when not
-  "language": "ru",          // "ru" | "ky"
+  "language": "ky",          // "ru" | "ky"
   "submissionId": "…"        // 8–64 chars of [A-Za-z0-9_-], stable across retries
 }
 ```
 
-`submissionId` is generated once per filled-in form and reused on retry, so a
-resend after a timeout is recognised as the same guest instead of booking them
-twice. Success is reported only when the server answers `success: true`; form
-values survive every failure.
+It answers `{ "success": true }`, or `{ "success": false, "code": "…" }` with
+`400 invalid_answer`, `503 not_configured` or `502 storage_failed`.
+
+The sheet columns: **Жөнөтүлгөн убакыт** (Bishkek time), **Аты-жөнү**,
+**Келеби** (Келет / Келбейт), **Конок саны**, **Тил**, **ID**.
+
+`submissionId` is generated once per filled-in form and reused on retry; a row
+whose ID is already in the sheet is not written again, so a resend after a
+timeout is recognised as the same guest instead of booking them twice. Success
+is reported only when the server answers `success: true`; form values survive
+every failure.
 
 ---
 
@@ -207,9 +230,14 @@ scales with its box at every breakpoint exactly as the old flattened image did.
 build inputs, no leftovers from sections that have been removed. Every `<img>`
 carries its intrinsic size so the page reserves space before the image arrives.
 
-The share image (`metadata.openGraph.images`) is kept under the 420 KB the
-Invitation Admin allows a share preview; the audio is only requested once a
-guest breaks the seal.
+The share image (`invitation.metadata.openGraphImage`,
+`public/assets/share-kutman-aiturgan.jpg`) is a 1200×630 JPEG of about 120 KB —
+WhatsApp drops previews much over 300 KB. `app/layout.tsx` publishes it with
+`og:title`, `og:description`, `og:url`, its size and alt text, and the matching
+Twitter card; every URL is made absolute against `NEXT_PUBLIC_SITE_URL` or, on
+Vercel, the production domain. WhatsApp caches a preview per URL, so a changed
+image should get a new file name. The audio is only requested once a guest
+breaks the seal.
 
 ---
 

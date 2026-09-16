@@ -1,7 +1,11 @@
-import { invitation } from "@/data/invitation";
 import type { Language } from "@/data/translations";
 
 export type Attendance = "yes" | "no";
+
+export const MAX_GUESTS = 20;
+export const MAX_NAME_LENGTH = 120;
+/** What a submission id may look like; checked again by the server. */
+export const SUBMISSION_ID_PATTERN = /^[A-Za-z0-9_-]{8,64}$/u;
 
 export interface RsvpPayload {
   guestName: string;
@@ -11,32 +15,26 @@ export interface RsvpPayload {
   submissionId: string;
 }
 
-/** The RSVP API is not reachable: neither the env var nor the data file has it. */
+/**
+ * The site's own route handler. It holds the Google credentials on the server,
+ * so the form only ever talks to its own origin.
+ */
+const RSVP_ENDPOINT = "/api/rsvp";
+
+/** The server has no Google Sheets credentials to write the answer with. */
 export class RsvpConfigurationError extends Error {
   constructor() {
-    super("RSVP endpoint is not configured.");
+    super("RSVP storage is not configured.");
     this.name = "RsvpConfigurationError";
   }
 }
 
-/** The request reached the server and it refused the answer. */
+/** The request reached the server and the answer was not saved. */
 export class RsvpServerError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "RsvpServerError";
   }
-}
-
-/**
- * Prefers the deployment's own environment variable and falls back to the
- * absolute URL the Invitation Admin writes into `invitation.rsvp.endpoint`.
- * Never a relative path and never localhost: both would break a deployed
- * invitation.
- */
-export function resolveRsvpEndpoint(): string {
-  const base = process.env.NEXT_PUBLIC_RSVP_API_URL?.trim().replace(/\/+$/u, "");
-  if (base) return `${base}/api/rsvp`;
-  return invitation.rsvp.endpoint.trim();
 }
 
 /**
@@ -56,15 +54,11 @@ export function createSubmissionId(): string {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-export async function submitRsvp(payload: RsvpPayload, fallbackMessage: string) {
-  const endpoint = resolveRsvpEndpoint();
-  if (!endpoint) throw new RsvpConfigurationError();
-
-  const response = await fetch(endpoint, {
+export async function submitRsvp(payload: RsvpPayload): Promise<void> {
+  const response = await fetch(RSVP_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      invitationSlug: invitation.slug,
       guestName: payload.guestName.trim(),
       attendance: payload.attendance,
       guestCount: payload.attendance === "no" ? 0 : payload.guestCount,
@@ -76,11 +70,10 @@ export async function submitRsvp(payload: RsvpPayload, fallbackMessage: string) 
   const result: unknown = await response.json().catch(() => null);
   const record =
     typeof result === "object" && result !== null ? (result as Record<string, unknown>) : null;
-  const message = typeof record?.message === "string" ? record.message : undefined;
 
-  if (!response.ok || record?.success !== true) {
-    throw new RsvpServerError(message || fallbackMessage);
-  }
-
-  return record;
+  if (response.ok && record?.success === true) return;
+  if (record?.code === "not_configured") throw new RsvpConfigurationError();
+  throw new RsvpServerError(
+    typeof record?.code === "string" ? record.code : `HTTP ${response.status}`,
+  );
 }

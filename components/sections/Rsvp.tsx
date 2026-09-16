@@ -6,6 +6,8 @@ import { templateContent } from "@/data/template-content";
 import { t, translations, type Language } from "@/data/translations";
 import {
   createSubmissionId,
+  MAX_GUESTS,
+  MAX_NAME_LENGTH,
   RsvpConfigurationError,
   submitRsvp,
   type Attendance,
@@ -18,10 +20,8 @@ type Status = "idle" | "submitting" | "success" | "error";
 /**
  * What the form has to say, kept as a reference rather than as finished words.
  *
- * A guest can switch language while a message is on screen, so the form's own
- * messages are stored by name and translated at render. Only what the server
- * itself wrote is kept verbatim — it answered in the language it was asked in,
- * and the page has no way to say it again in the other one.
+ * A guest can switch language while a message is on screen, so every message
+ * is stored by name and translated at render.
  */
 type OwnMessage = Extract<
   keyof typeof translations.rsvp,
@@ -35,22 +35,18 @@ type OwnMessage = Extract<
   | "attendanceRequired"
 >;
 
-type Feedback =
-  { kind: "none" } | { kind: "own"; key: OwnMessage } | { kind: "server"; text: string };
+type Feedback = { kind: "none" } | { kind: "own"; key: OwnMessage };
 
 const NO_FEEDBACK: Feedback = { kind: "none" };
-
-const MAX_GUESTS = 20;
 
 /**
  * Guest questionnaire.
  *
- * It posts to the central RSVP API — the absolute URL comes from the
- * deployment's environment variable, or from the one the admin writes into
- * `invitation.rsvp.endpoint`. Nothing is ever reported as sent unless the
- * server said so, the answers stay in the fields after a failure, and one
- * filled-in form keeps a single submission id so a retry after a timeout is
- * not counted as a second guest.
+ * It posts to the site's own `/api/rsvp` route, which writes the answer to
+ * Google Sheets. Nothing is ever reported as sent unless the server said so,
+ * the answers stay in the fields after a failure, and one filled-in form keeps
+ * a single submission id so a retry after a timeout is not counted as a second
+ * guest.
  */
 export default function Rsvp({ language }: { language: Language }) {
   const fieldId = useId();
@@ -83,8 +79,7 @@ export default function Rsvp({ language }: { language: Language }) {
   };
 
   const say = (key: OwnMessage) => t(translations.rsvp[key], language);
-  const message =
-    feedback.kind === "own" ? say(feedback.key) : feedback.kind === "server" ? feedback.text : "";
+  const message = feedback.kind === "own" ? say(feedback.key) : "";
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -97,7 +92,7 @@ export default function Rsvp({ language }: { language: Language }) {
       setFeedback(NO_FEEDBACK);
       return;
     }
-    if (name.length > 120) {
+    if (name.length > MAX_NAME_LENGTH) {
       setNameError("nameTooLong");
       return;
     }
@@ -123,16 +118,13 @@ export default function Rsvp({ language }: { language: Language }) {
     setFeedback(NO_FEEDBACK);
 
     try {
-      await submitRsvp(
-        {
-          guestName: name,
-          attendance,
-          guestCount: count,
-          language,
-          submissionId: submissionId.current,
-        },
-        t(translations.rsvp.serverError, language),
-      );
+      await submitRsvp({
+        guestName: name,
+        attendance,
+        guestCount: count,
+        language,
+        submissionId: submissionId.current,
+      });
       setStatus("success");
       setFeedback({ kind: "own", key: "success" });
     } catch (error) {
@@ -141,8 +133,6 @@ export default function Rsvp({ language }: { language: Language }) {
         setFeedback({ kind: "own", key: "configurationError" });
       } else if (error instanceof TypeError) {
         setFeedback({ kind: "own", key: "networkError" });
-      } else if (error instanceof Error && error.message) {
-        setFeedback({ kind: "server", text: error.message });
       } else {
         setFeedback({ kind: "own", key: "serverError" });
       }
@@ -231,7 +221,7 @@ export default function Rsvp({ language }: { language: Language }) {
                         type="text"
                         className="rsvp__input"
                         value={guestName}
-                        maxLength={120}
+                        maxLength={MAX_NAME_LENGTH}
                         autoComplete="name"
                         placeholder={t(templateContent.rsvp.namePlaceholder, language)}
                         aria-invalid={nameError ? true : undefined}

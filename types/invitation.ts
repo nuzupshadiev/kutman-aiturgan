@@ -42,13 +42,15 @@ export interface InvitationData {
     music?: string;
   };
   metadata: {
-    /** The occasion label, naming nobody; the admin reads it, never rewrites it. */
+    /** The occasion label, naming nobody. */
     titleSuffix: LocalizedText;
-    /** Rewritten per customer: the tab title and the shared-link title. */
+    /** The tab title. */
     title: LocalizedText;
     description: LocalizedText;
     openGraphTitle: LocalizedText;
     openGraphDescription: LocalizedText;
+    /** Site-relative path to the 1200×630 share preview. */
+    openGraphImage: string;
+    openGraphImageAlt: LocalizedText;
   };
-  rsvp: { endpoint: string };
 }

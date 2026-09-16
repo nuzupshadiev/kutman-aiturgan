@@ -70,8 +70,10 @@ const language: Language = isLanguage(invitation.defaultLanguage)
 const OPEN_GRAPH_LOCALES = { ru: "ru_RU", ky: "ky_KG" } as const;
 
 /**
- * `metadataBase` comes from the deployment, never from the data file: the
- * admin sets NEXT_PUBLIC_SITE_URL on every generated invitation.
+ * The public origin every URL in the share preview is made absolute against —
+ * WhatsApp and Telegram ignore an `og:image` that is not. Vercel provides the
+ * production domain on its own; NEXT_PUBLIC_SITE_URL overrides it when the
+ * invitation is served from a custom domain.
  */
 function resolveSiteUrl(): URL {
   const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
@@ -83,19 +85,39 @@ function resolveSiteUrl(): URL {
   return new URL("http://localhost:3000");
 }
 
+const title = t(invitation.metadata.title, language);
+const description = t(invitation.metadata.description, language);
+const shareTitle = t(invitation.metadata.openGraphTitle, language);
+const shareDescription = t(invitation.metadata.openGraphDescription, language);
+const shareImage = {
+  url: invitation.metadata.openGraphImage,
+  width: 1200,
+  height: 630,
+  type: "image/jpeg",
+  alt: t(invitation.metadata.openGraphImageAlt, language),
+};
+
 export const metadata: Metadata = {
   metadataBase: resolveSiteUrl(),
-  title: t(invitation.metadata.title, language),
-  description: t(invitation.metadata.description, language),
+  title,
+  description,
   applicationName: t(invitation.metadata.titleSuffix, language),
   robots: { index: false, follow: false },
   icons: { icon: "/assets/3732-346-Group_203.png" },
   openGraph: {
     type: "website",
-    title: t(invitation.metadata.openGraphTitle, language),
-    description: t(invitation.metadata.openGraphDescription, language),
+    url: "/",
+    siteName: `${t(invitation.people.groom.name, language)} & ${t(invitation.people.bride.name, language)}`,
+    title: shareTitle,
+    description: shareDescription,
     locale: OPEN_GRAPH_LOCALES[language],
-    images: ["/assets/3439-626-photo.jpg"],
+    images: [shareImage],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: shareTitle,
+    description: shareDescription,
+    images: [shareImage],
   },
   formatDetection: { telephone: false },
 };

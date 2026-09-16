@@ -5,7 +5,7 @@ import { Fragment, type CSSProperties } from "react";
 import { invitation } from "@/data/invitation";
 import { templateContent } from "@/data/template-content";
 import { t, translations, type Language } from "@/data/translations";
-import { monthName, parseIsoDate, weekOfDate } from "@/lib/date";
+import { monthName, weekOfDate } from "@/lib/date";
 import { messageLines } from "@/lib/message";
 import FitLine from "@/components/FitLine";
 
@@ -20,10 +20,8 @@ const LOCALES = { ru: "ru-RU", ky: "ky-KG" } as const;
 /** The welcome note, the wedding-day calendar and the venue. */
 export default function Invitation({ language }: { language: Language }) {
   const { date } = invitation.event;
-  const weddingDay = parseIsoDate(date).day;
-  const week = weekOfDate(date);
-  /** Which of the seven columns the heart sits behind. */
-  const markedColumn = week.indexOf(weddingDay);
+  /** The seven days on the strip, and which column the heart sits behind. */
+  const { days: week, marked: markedColumn } = weekOfDate(date);
 
   const names = {
     groom: t(invitation.people.groom.name, language),
@@ -110,26 +108,24 @@ export default function Invitation({ language }: { language: Language }) {
                           <span key={day}>{day}</span>
                         ))}
                       </div>
-                      {markedColumn >= 0 ? (
-                        <svg
-                          className="calendar__heart"
-                          style={{ "--marked": markedColumn } as CSSProperties}
-                          viewBox="131 33 63 55"
-                          role="presentation"
-                          focusable="false"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path d={HEART} />
-                        </svg>
-                      ) : null}
+                      <svg
+                        className="calendar__heart"
+                        style={{ "--marked": markedColumn } as CSSProperties}
+                        viewBox="131 33 63 55"
+                        role="presentation"
+                        focusable="false"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path d={HEART} />
+                      </svg>
                       <div className="calendar__row calendar__row_days">
                         {week.map((day, index) => (
                           <span
-                            key={day ?? `empty-${index}`}
-                            className={day === weddingDay ? "calendar__day_marked" : undefined}
-                            aria-current={day === weddingDay ? "date" : undefined}
+                            key={index}
+                            className={index === markedColumn ? "calendar__day_marked" : undefined}
+                            aria-current={index === markedColumn ? "date" : undefined}
                           >
-                            {day ?? ""}
+                            {day}
                           </span>
                         ))}
                       </div>
